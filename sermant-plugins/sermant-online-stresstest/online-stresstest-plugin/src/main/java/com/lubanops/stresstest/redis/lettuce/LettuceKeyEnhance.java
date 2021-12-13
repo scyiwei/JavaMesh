@@ -24,7 +24,7 @@ public class LettuceKeyEnhance implements EnhanceDefinition {
     @Override
     public MethodInterceptPoint[] getMethodInterceptPoints() {
         return new MethodInterceptPoint[]{MethodInterceptPoint.newInstMethodInterceptPoint(INTERCEPT_CLASS,
-                ElementMatchers.namedOneOf("addKey", "addKeys"))
+                ElementMatchers.named("addKey"))
         };
     }
 }

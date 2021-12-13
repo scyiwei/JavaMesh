@@ -84,11 +84,8 @@ public class RedisUtils {
      */
     @SuppressWarnings("unchecked")
     public static <T> T modifyKey(final T key) {
-        if (key instanceof Iterable) {
-            return (T) modifyIterable((Iterable<?>) key);
-        }
-        if (key != null && key.getClass().isArray()) {
-            return (T) modifyArray((Object[]) key);
+        if (key instanceof byte[]) {
+            return (T) modifyBytes((byte[]) key);
         }
         return modifySingleKey(key);
     }
@@ -101,10 +98,7 @@ public class RedisUtils {
     @SuppressWarnings("unchecked")
     public static <T> T modifySingleKey(final T key) {
         if (key instanceof String) {
-            return (T) modifyString((String) key);
-        }
-        if (key instanceof byte[]) {
-            return (T) modifyBytes((byte[]) key);
+            return (T) (StringUtils.isNotBlank((String) key) && !((String) key).startsWith(KEY) ? KEY + key : (String) key);
         }
         return key;
     }
@@ -117,37 +111,10 @@ public class RedisUtils {
     public static byte[] modifyBytes(final byte[] key) {
         try {
             String str = new String(key, DEFAULT_CHARSET);
-            return modifyKey(str).getBytes(DEFAULT_CHARSET);
+            return modifySingleKey(str).getBytes(DEFAULT_CHARSET);
         } catch (UnsupportedEncodingException e) {
             LOGGER.severe("Don't support UTF-8.");
         }
         return key;
-    }
-
-    /**
-     * 修改String， 加上影子前缀
-     * @param key 要修改的key
-     * @return 修改后的key
-     */
-    public static String modifyString(final String key) {
-        return StringUtils.isNotBlank(key) && !key.startsWith(KEY) ? KEY + key : key;
-    }
-
-    private static <T> Iterable<T> modifyIterable(final Iterable<T> keys) {
-        List<T> results = new ArrayList<>();
-        for (T key: keys) {
-            results.add(modifySingleKey(key));
-        }
-        return results;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T[] modifyArray(final T[] keys) {
-        int length = keys.length;
-        T[] results = (T[])new Object[length];
-        for (int i = 0; i< length; i++) {
-            results[i] = modifySingleKey(keys[i]);
-        }
-        return results;
     }
 }
