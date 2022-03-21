@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,59 @@
 package com.huawei.gray.dubbo.strategy.type;
 
 import com.huawei.gray.dubbo.strategy.TypeStrategy;
+import com.huawei.sermant.core.common.CommonConstant;
+import com.huawei.sermant.core.common.LoggerFactory;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * enabled匹配策略测试
  *
- * @author pengyuyi
- * @date 2021/12/1
+ * @author provenceee
+ * @since 2021-12-01
  */
+@SuppressWarnings("checkstyle:all")
 public class EnabledTypeStrategyTest {
+    /**
+     * 初始化
+     */
+    @Before
+    public void before() {
+        Map<String, Object> map = new HashMap<>();
+        map.put(CommonConstant.LOG_SETTING_FILE_KEY, getClass().getResource("/logback-test.xml").getPath());
+        LoggerFactory.init(map);
+    }
+
+    /**
+     * 测试enabled策略
+     */
     @Test
     public void testValue() {
         TypeStrategy strategy = new EnabledTypeStrategy();
         Entity entity = new Entity();
         entity.setEnabled(true);
+
         // 正常情况
-        Assert.assertEquals(Boolean.TRUE.toString(), strategy.getValue(entity, ".isEnabled()"));
+        Assert.assertEquals(Boolean.TRUE.toString(), strategy.getValue(entity, ".isEnabled()").orElse(null));
+
+        // 测试找不到方法
+        Assert.assertEquals(Boolean.FALSE.toString(), strategy.getValue(entity, ".foo()").orElse(null));
+
         // 测试null
-        Assert.assertNotEquals(Boolean.TRUE.toString(), strategy.getValue(new Entity(), ".isEnabled()"));
+        Assert.assertNotEquals(Boolean.TRUE.toString(), strategy.getValue(new Entity(), ".isEnabled()").orElse(null));
     }
 
-    private static class Entity {
+    /**
+     * 测试实体
+     *
+     * @since 2021-12-01
+     */
+    public static class Entity {
         private Boolean enabled;
 
         public Boolean isEnabled() {

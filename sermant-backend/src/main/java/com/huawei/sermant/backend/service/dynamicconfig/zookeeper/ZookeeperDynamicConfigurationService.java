@@ -16,12 +16,12 @@
 
 package com.huawei.sermant.backend.service.dynamicconfig.zookeeper;
 
+import com.huawei.sermant.backend.common.exception.ZookeeperDynamicConfigurationException;
 import com.huawei.sermant.backend.service.dynamicconfig.Config;
 import com.huawei.sermant.backend.service.dynamicconfig.service.ConfigChangeType;
 import com.huawei.sermant.backend.service.dynamicconfig.service.ConfigChangedEvent;
 import com.huawei.sermant.backend.service.dynamicconfig.service.ConfigurationListener;
 import com.huawei.sermant.backend.service.dynamicconfig.service.DynamicConfigurationService;
-import com.huawei.sermant.backend.service.dynamicconfig.utils.LabelGroupUtils;
 import org.apache.zookeeper.AddWatchMode;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -39,7 +39,6 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -67,33 +66,40 @@ public class ZookeeperDynamicConfigurationService implements DynamicConfiguratio
         return Config.getTimeout_value();
     }
 
-    public static synchronized ZookeeperDynamicConfigurationService getInstance() {
+    /**
+     * zookeeper 动态配置实现
+     *
+     * @return 配置实现
+     * @throws ZookeeperDynamicConfigurationException 异常
+     */
+    public static synchronized ZookeeperDynamicConfigurationService getInstance()
+            throws ZookeeperDynamicConfigurationException {
         if (serviceInst == null) {
             serviceInst = new ZookeeperDynamicConfigurationService();
-            URI zk_uri;
+            URI zkUri;
 
             try {
-                zk_uri = new URI(Config.getZookeeperUri());
+                zkUri = new URI(Config.getZookeeperUri());
             } catch (URISyntaxException e) {
                 logger.error(e.getMessage(), e);
-                throw new RuntimeException(e);
+                throw new ZookeeperDynamicConfigurationException(e.getMessage());
             }
 
-            String zk_con_str = zk_uri.getHost();
-            if (zk_uri.getPort() > 0) {
-                zk_con_str = zk_con_str + ":" + zk_uri.getPort();
+            String zkConStr = zkUri.getHost();
+            if (zkUri.getPort() > 0) {
+                zkConStr = zkConStr + ":" + zkUri.getPort();
             }
 
             ZooKeeper zkInst;
             try {
-                zkInst = new ZooKeeper(zk_con_str, Config.getTimeout_value(), new Watcher() {
+                zkInst = new ZooKeeper(zkConStr, Config.getTimeout_value(), new Watcher() {
                     @Override
                     public void process(WatchedEvent event) {
                     }
                 });
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
-                throw new RuntimeException(e);
+                throw new ZookeeperDynamicConfigurationException(e.getMessage());
             }
 
             serviceInst.zkClient = zkInst;
@@ -196,16 +202,18 @@ public class ZookeeperDynamicConfigurationService implements DynamicConfiguratio
     @Override
     public boolean addConfigListener(String key, String group, ConfigurationListener listener) {
 
-        if (listener == null)
+        if (listener == null) {
             return false;
+        }
 
         final String finalGroup = fixGroup(group);
         final String fullPath = getPath(key, finalGroup);
         Watcher wc = new Watcher() {
             @Override
             public void process(WatchedEvent event) {
-                if (!fullPath.equals(event.getPath()))
+                if (!fullPath.equals(event.getPath())) {
                     logger.warn("unexpected event " + event + " for " + key + ":" + finalGroup);
+                }
                 String content = getConfig(key, finalGroup);
                 ConfigChangeType changeType = transEventType(event.getType());
                 ConfigChangedEvent cce = new ConfigChangedEvent(key, finalGroup, content, changeType);
@@ -279,8 +287,6 @@ public class ZookeeperDynamicConfigurationService implements DynamicConfiguratio
                     createRecursivly(temp);
                 }
                 zkClient.create(path, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            } else {
-
             }
         } catch (KeeperException e) {
             logger.warn(e.getMessage(), e);
@@ -322,55 +328,55 @@ public class ZookeeperDynamicConfigurationService implements DynamicConfiguratio
     @Override
     public List<String> listConfigsFromGroup(String group) {
         group = group.trim();
-        if (group.startsWith("/") == false) {
+        if (!group.startsWith("/")) {
             group = "/" + group;
         }
-        List<String> str_array = null;
+        List<String> strArray = null;
         try {
-            str_array = listNodesFromNode(group);
+            strArray = listNodesFromNode(group);
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
-        return str_array;
+        return strArray;
     }
 
     @Override
     public List<String> listConfigsFromConfig(String key, String group) {
         group = group.trim();
-        if (group.startsWith("/") == false) {
+        if (!group.startsWith("/")) {
             group = "/" + group;
         }
         key = key.trim();
-        if (key.startsWith("/") == false) {
+        if (!key.startsWith("/")) {
             key = "/" + key;
         }
 
-        List<String> str_array = null;
+        List<String> strArray = null;
         try {
-            str_array = listNodesFromNode(group + key);
+            strArray = listNodesFromNode(group + key);
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
-        return str_array;
+        return strArray;
     }
 
     private List<String> listNodesFromNode(String node) {
-        List<String> str_array = new Vector<String>();
+        List<String> strArray = new Vector<String>();
         try {
             if (zkClient.exists(node, false) != null) {
-                str_array = zkClient.getChildren(node, null);
+                strArray = zkClient.getChildren(node, null);
             }
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
-        for (int i = 0; i < str_array.size(); i++) {
-            String str = str_array.get(i);
+        for (int len = 0; len < strArray.size(); len++) {
+            String str = strArray.get(len);
             for (String grandChild : listNodesFromNode(node + "/" + str)) {
-                str_array.add(str + '/' + grandChild);
+                strArray.add(str + '/' + grandChild);
             }
         }
 
-        return str_array;
+        return strArray;
     }
 
     /**

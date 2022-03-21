@@ -2,13 +2,13 @@
 
 本文档针对开发过程中涉及的**第三方**源码或二进制包的版权作相关说明。
 
-## 源码抄袭
+## 源码引用
 
-如果在代码中，存在以下情况，视为对**第三方**源码的抄袭：
+如果在代码中，存在以下情况，视为对**第三方**源码的 **引用**：
 
 - 整体拷贝：直接拷贝**第三方**源码中的文件，在其基础上进行修改。
 - 局部拷贝：拷贝**第三方**源码中部分方法或内部类，将其用于自研代码中。
-- 设计参考：开发者在进行架构设计时，若参考**第三方**的架构，且两种架构中存在定位相同的内容，也视为抄袭。
+- 设计参考：开发者在进行架构设计时，若参考**第三方**的架构，且两种架构中存在定位相同的内容，也视为 **引用**。
 
 以上三种情况中，需要开发者对涉及的文件做如下操作：
 
@@ -66,16 +66,16 @@
 综上，`RELEASE`产品包内部结构形如：
 - `agent`目录: 核心增强逻辑
 - `server`目录: 增强逻辑配套的服务端
-- `licenses`目录: 与本工程`LICENSE`不同的**第三方**`LICENSE`存放目录
-- `LICENSE`文件: 本工程`LICENSE`文件，附加拷贝**第三方**源码的声明，以及`RELEASE`产品包中涉及的所有**第三方**`jar`包的`LICENSE`说明
-- `NOTICE`文件: 本工程`NOTICE`文件，追加拷贝**第三方**源码的`NOTICE`文件。
+- `licenses`目录: 与本工程`LICENSE`不同的**第三方开源依赖项目**`LICENSE`存放目录
+- `LICENSE`文件: 本工程`LICENSE`文件，附加拷贝**第三方开源**源码的LICENSE声明，以及`RELEASE`产品包中涉及的所有**第三方开源依赖项目**`jar`包的`LICENSE`说明
+- `NOTICE`文件: 本工程`NOTICE`文件，追加拷贝**第三方开源**源码的`NOTICE`文件。
 
 本工程通过以下方式生成`RELEASE`产品包的`LICENSE`文件、`NOTICE`文件和`licenses`目录：
 - 通过`license-maven-plugin`插件生成项目中所有涉及的第三方`jar`包的`LICENSE`信息：
   ```shell
   mvn license:aggregate-add-third-party
   ```
-  生成的文件`LICENSE-binary-suffix.txt`存放于`sermant-package`模块的`resources`目录。该过程初次执行时间较旧，请耐心等待。
+  生成的文件`LICENSE-binary-suffix.txt`存放于`sermant-package`模块的`resources`目录。该过程初次执行时间较久，请耐心等待。
 - 工程各组件打包，输出到临时目录下。
 - 在`sermant-package`模块打包时：
   - 将工程源码的`LICENSE`文件、`NOTICE`文件和`licenses`目录拷贝到临时目录中。

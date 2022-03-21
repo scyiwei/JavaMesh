@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,15 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 标签缓存
  *
- * @author pengyuyi
- * @date 2021/10/13
+ * @author provenceee
+ * @since 2021-10-13
  */
 public class LabelCache {
     // 需要刷新标签的缓存
     private static final Map<String, GrayConfiguration> CACHE = new ConcurrentHashMap<String, GrayConfiguration>();
+
+    private LabelCache() {
+    }
 
     /**
      * 获取指定标签

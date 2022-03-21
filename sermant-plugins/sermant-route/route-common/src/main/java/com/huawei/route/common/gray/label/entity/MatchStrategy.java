@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,8 @@ import java.util.Locale;
 /**
  * 值匹配策略
  *
- * @author pengyuyi
- * @date 2021/10/14
+ * @author provenceee
+ * @since 2021-10-14
  */
 public enum MatchStrategy {
     /**
@@ -82,8 +82,7 @@ public enum MatchStrategy {
     /**
      * 前缀匹配
      */
-    PREFIX(new PrefixValueMatchStrategy()),
-    ;
+    PREFIX(new PrefixValueMatchStrategy());
 
     private final ValueMatchStrategy valueMatchStrategy;
 
@@ -96,18 +95,22 @@ public enum MatchStrategy {
      *
      * @param values 期望值
      * @param arg 参数值
-     * @param caseInsensitive 是否区分大小写
+     * @param isCaseInsensitive 是否区分大小写
      * @return 是否匹配
      */
-    public boolean isMatch(List<String> values, String arg, boolean caseInsensitive) {
-        if (caseInsensitive || values == null || arg == null) {
+    public boolean isMatch(List<String> values, String arg, boolean isCaseInsensitive) {
+        if (isCaseInsensitive || values == null || arg == null) {
             return valueMatchStrategy.isMatch(values, arg);
         }
+
         // 如果大小写不敏感，则统一转成大写
         List<String> list = new ArrayList<String>(values);
         ListIterator<String> listIterator = list.listIterator();
         while (listIterator.hasNext()) {
-            listIterator.set(listIterator.next().toUpperCase(Locale.ROOT));
+            String next = listIterator.next();
+            if (next != null) {
+                listIterator.set(next.toUpperCase(Locale.ROOT));
+            }
         }
         return valueMatchStrategy.isMatch(list, arg.toUpperCase(Locale.ROOT));
     }

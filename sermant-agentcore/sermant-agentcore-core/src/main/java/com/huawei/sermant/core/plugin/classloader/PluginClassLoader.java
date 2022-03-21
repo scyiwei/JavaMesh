@@ -16,19 +16,28 @@
 
 package com.huawei.sermant.core.plugin.classloader;
 
+import com.huawei.sermant.core.config.ConfigManager;
+import com.huawei.sermant.core.plugin.agent.config.AgentConfig;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 插件类加载器，用于加载插件服务包
  *
  * @author HapThorin
  * @version 1.0.0
- * @since 2021/11/12
+ * @since 2021-11-12
  */
 public class PluginClassLoader extends URLClassLoader {
+    /**
+     * 不优先使用PluginClassLoader加载的全限定名前缀
+     */
+    private final Set<String> ignoredPrefixes = ConfigManager.getConfig(AgentConfig.class).getIgnoredPrefixes();
+
     /**
      * 对ClassLoader内部已加载的Class的管理
      */
@@ -39,12 +48,12 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     /**
-     * 自己实现一套findLoaded再find的逻辑，避免优先查找AppClassLoader的类
+     * 加载插件服务包中的类并维护
      *
      * @param name 全限定名
      * @return Class对象
      */
-    private Class<?> getPluginClass(String name) {
+    private Class<?> loadPluginClass(String name) {
         if (!pluginClassMap.containsKey(name)) {
             try {
                 pluginClassMap.put(name, findClass(name));
@@ -55,10 +64,22 @@ public class PluginClassLoader extends URLClassLoader {
         return pluginClassMap.get(name);
     }
 
+    private boolean ifExclude(String name) {
+        for (String excludePrefix : ignoredPrefixes) {
+            if (name.startsWith(excludePrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
-            Class<?> clazz = getPluginClass(name);
+            Class<?> clazz = null;
+            if (!ifExclude(name)) {
+                clazz = loadPluginClass(name);
+            }
             if (clazz == null) {
                 clazz = super.loadClass(name, resolve);
             }
@@ -67,5 +88,10 @@ public class PluginClassLoader extends URLClassLoader {
             }
             return clazz;
         }
+    }
+
+    @Override
+    public void addURL(URL url) {
+        super.addURL(url);
     }
 }

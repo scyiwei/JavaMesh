@@ -20,9 +20,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.huawei.sermant.metricserver.dto.ibmpool.IbmMemoryPoolDTO;
 import com.huawei.sermant.metricserver.dto.ibmpool.IbmPoolType;
 import com.huawei.sermant.metricserver.service.IbmMemoryPoolService;
-import com.huawei.sermant.sample.servermonitor.entity.IbmJvmMetric;
-import com.huawei.sermant.sample.servermonitor.entity.IbmJvmMetricCollection;
-import com.huawei.sermant.sample.servermonitor.entity.IbmPoolMetric;
+import com.huawei.sermant.plugin.servermonitor.entity.IbmJvmMetric;
+import com.huawei.sermant.plugin.servermonitor.entity.IbmJvmMetricCollection;
+import com.huawei.sermant.plugin.servermonitor.entity.IbmPoolMetric;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -52,12 +52,12 @@ public class IbmJvmMonitorKafkaReceiver {
         } catch (InvalidProtocolBufferException e) {
             return;
         }
-        final List<IbmMemoryPoolDTO> metricsToBeStored = buildDTOs(collection);
+        final List<IbmMemoryPoolDTO> metricsToBeStored = buildDtoS(collection);
         ibmMemoryPoolService.batchAddMemoryPools(metricsToBeStored);
     }
 
-    private LinkedList<IbmMemoryPoolDTO> buildDTOs(IbmJvmMetricCollection collection) {
-        final LinkedList<IbmMemoryPoolDTO> metrics = new LinkedList<>();
+    private List<IbmMemoryPoolDTO> buildDtoS(IbmJvmMetricCollection collection) {
+        final List<IbmMemoryPoolDTO> metrics = new LinkedList<>();
         final String service = collection.getService();
         final String serviceInstance = collection.getServiceInstance();
         for (IbmJvmMetric ibmJvmMetric : collection.getMetricsList()) {

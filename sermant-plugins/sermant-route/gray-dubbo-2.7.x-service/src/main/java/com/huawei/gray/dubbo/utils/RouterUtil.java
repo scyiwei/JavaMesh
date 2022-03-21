@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,7 @@ package com.huawei.gray.dubbo.utils;
 
 import com.huawei.gray.dubbo.cache.DubboCache;
 import com.huawei.gray.dubbo.strategy.TypeStrategyChooser;
-import com.huawei.sermant.core.lubanops.bootstrap.utils.StringUtils;
 import com.huawei.route.common.gray.constants.GrayConstant;
-import com.huawei.route.common.gray.label.LabelCache;
-import com.huawei.route.common.gray.label.entity.CurrentTag;
 import com.huawei.route.common.gray.label.entity.GrayConfiguration;
 import com.huawei.route.common.gray.label.entity.Match;
 import com.huawei.route.common.gray.label.entity.MatchRule;
@@ -30,14 +27,11 @@ import com.huawei.route.common.gray.label.entity.Route;
 import com.huawei.route.common.gray.label.entity.Rule;
 import com.huawei.route.common.gray.label.entity.ValueMatch;
 import com.huawei.route.common.utils.CollectionUtils;
-
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.rpc.Invocation;
+import com.huawei.sermant.core.lubanops.bootstrap.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,68 +39,11 @@ import java.util.Map.Entry;
 /**
  * 应用路由插件工具类
  *
- * @author l30008180
- * @since 2021年6月21日
+ * @author provenceee
+ * @since 2021-06-21
  */
 public class RouterUtil {
-    // dubbo请求中下游应用名
-    private static final String REMOTE_APP_NAME = "remote.application";
-
-    // dubbo请求中是否为consumer的key值
-    private static final String CONSUMER_KEY = "side";
-
-    // dubbo请求中是否为consumer的value值
-    private static final String CONSUMER_VALUE = "consumer";
-
     private RouterUtil() {
-    }
-
-    /**
-     * 根据Dubbo服务地址获取下游服务名：参数中的remote.application数据
-     *
-     * @param url dubbo请求地址
-     * @return 下游服务名
-     */
-    public static String getTargetService(URL url) {
-        return url.getParameter(REMOTE_APP_NAME);
-    }
-
-    /**
-     * 根据Dubbo服务地址获取是否为消费者：参数中的side数据
-     *
-     * @param url dubbo请求地址
-     * @return 是否为消费者
-     */
-    public static boolean isConsumer(URL url) {
-        return CONSUMER_VALUE.equals(url.getParameter(CONSUMER_KEY));
-    }
-
-    /**
-     * 根据invocation获取ldc
-     *
-     * @param invocation invocation
-     * @return LDC
-     */
-    public static String getLdc(Invocation invocation) {
-        String ldc = invocation.getAttachment(GrayConstant.GRAY_LDC);
-        return StringUtils.isBlank(ldc) ? getLdc() : ldc;
-    }
-
-    /**
-     * 获取当前服务的ldc
-     *
-     * @return LDC
-     */
-    public static String getLdc() {
-        GrayConfiguration grayConfiguration = LabelCache.getLabel(DubboCache.getLabelName());
-        if (GrayConfiguration.isInValid(grayConfiguration)) {
-            return GrayConstant.GRAY_DEFAULT_LDC;
-        }
-        CurrentTag currentTag = grayConfiguration.getCurrentTag();
-        if (currentTag == null || StringUtils.isBlank(currentTag.getLdc())) {
-            return GrayConstant.GRAY_DEFAULT_LDC;
-        }
-        return currentTag.getLdc();
     }
 
     /**
@@ -118,7 +55,7 @@ public class RouterUtil {
      * @return 目标规则
      */
     public static List<Rule> getValidRules(GrayConfiguration grayConfiguration, String targetService,
-            String interfaceName) {
+        String interfaceName) {
         if (GrayConfiguration.isInValid(grayConfiguration)) {
             return Collections.emptyList();
         }
@@ -126,7 +63,7 @@ public class RouterUtil {
         if (CollectionUtils.isEmpty(routeRule) || CollectionUtils.isEmpty(routeRule.get(targetService))) {
             return Collections.emptyList();
         }
-        List<Rule> list = new ArrayList<Rule>();
+        List<Rule> list = new ArrayList<>();
         for (Rule rule : routeRule.get(targetService)) {
             if (isInvalidRule(rule, interfaceName)) {
                 continue;
@@ -139,39 +76,19 @@ public class RouterUtil {
             removeInvalidRoute(rule.getRoute());
             list.add(rule);
         }
-        Collections.sort(list, new Comparator<Rule>() {
-            @Override
-            public int compare(Rule o1, Rule o2) {
-                return o1.getPrecedence() - o2.getPrecedence();
-            }
-        });
+        list.sort(Comparator.comparingInt(Rule::getPrecedence));
         return list;
     }
 
     private static void removeInvalidRules(Map<String, List<MatchRule>> args) {
-        Iterator<Entry<String, List<MatchRule>>> matchRuleListIterator = args.entrySet().iterator();
-        while (matchRuleListIterator.hasNext()) {
-            if (isInvalidArgs(matchRuleListIterator.next())) {
-                matchRuleListIterator.remove();
-            }
-        }
+        args.entrySet().removeIf(RouterUtil::isInvalidArgs);
         for (List<MatchRule> matchRules : args.values()) {
-            Iterator<MatchRule> matchRuleIterator = matchRules.iterator();
-            while (matchRuleIterator.hasNext()) {
-                if (isInvalidMatchRule(matchRuleIterator.next())) {
-                    matchRuleIterator.remove();
-                }
-            }
+            matchRules.removeIf(RouterUtil::isInvalidMatchRule);
         }
     }
 
     private static void removeInvalidRoute(List<Route> routeList) {
-        Iterator<Route> routeIterator = routeList.iterator();
-        while (routeIterator.hasNext()) {
-            if (isInvalidRoute(routeIterator.next())) {
-                routeIterator.remove();
-            }
-        }
+        routeList.removeIf(RouterUtil::isInvalidRoute);
     }
 
     private static boolean isInvalidRule(Rule rule, String interfaceName) {
@@ -183,7 +100,7 @@ public class RouterUtil {
             return true;
         }
         String source = match.getSource();
-        if (StringUtils.isNotBlank(source) && !source.equals(DubboCache.getAppName())) {
+        if (StringUtils.isNotBlank(source) && !source.equals(DubboCache.INSTANCE.getAppName())) {
             return true;
         }
         if (!interfaceName.equals(match.getPath())) {
@@ -201,8 +118,8 @@ public class RouterUtil {
 
     private static boolean isInvalidMatchRule(MatchRule matchRule) {
         return matchRule == null || matchRule.getValueMatch() == null
-                || CollectionUtils.isEmpty(matchRule.getValueMatch().getValues())
-                || matchRule.getValueMatch().getMatchStrategy() == null;
+            || CollectionUtils.isEmpty(matchRule.getValueMatch().getValues())
+            || matchRule.getValueMatch().getMatchStrategy() == null;
     }
 
     private static boolean isInvalidRoute(Route route) {
@@ -219,16 +136,16 @@ public class RouterUtil {
     public static List<Route> getRoutes(List<Rule> list, Object[] arguments) {
         for (Rule rule : list) {
             List<Route> routeList = getRoutes(arguments, rule);
-            if (routeList != null) {
+            if (!CollectionUtils.isEmpty(routeList)) {
                 return routeList;
             }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     private static List<Route> getRoutes(Object[] arguments, Rule rule) {
         Match match = rule.getMatch();
-        boolean fullMatch = match.isFullMatch();
+        boolean isFullMatch = match.isFullMatch();
         Map<String, List<MatchRule>> args = match.getArgs();
         for (Entry<String, List<MatchRule>> entry : args.entrySet()) {
             String key = entry.getKey();
@@ -240,22 +157,23 @@ public class RouterUtil {
                 ValueMatch valueMatch = matchRule.getValueMatch();
                 List<String> values = valueMatch.getValues();
                 MatchStrategy matchStrategy = valueMatch.getMatchStrategy();
-                String arg = TypeStrategyChooser.INSTANCE.getValue(matchRule.getType(), key, arguments);
-                if (!fullMatch && matchStrategy.isMatch(values, arg, matchRule.isCaseInsensitive())) {
+                String arg = TypeStrategyChooser.INSTANCE.getValue(matchRule.getType(), key, arguments).orElse(null);
+                if (!isFullMatch && matchStrategy.isMatch(values, arg, matchRule.isCaseInsensitive())) {
                     // 如果不是全匹配，且匹配了一个，那么直接return
                     return rule.getRoute();
                 }
-                if (fullMatch && !matchStrategy.isMatch(values, arg, matchRule.isCaseInsensitive())) {
+                if (isFullMatch && !matchStrategy.isMatch(values, arg, matchRule.isCaseInsensitive())) {
                     // 如果是全匹配，且有一个不匹配，则继续下一个规则
-                    return null;
+                    return Collections.emptyList();
                 }
             }
         }
-        if (fullMatch) {
+        if (isFullMatch) {
             // 如果是全匹配，走到这里，说明没有不匹配的，直接return
             return rule.getRoute();
         }
+
         // 如果不是全匹配，走到这里，说明没有一个规则能够匹配上，则继续下一个规则
-        return null;
+        return Collections.emptyList();
     }
 }

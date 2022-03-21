@@ -22,10 +22,7 @@ import com.huawei.sermant.backend.service.dynamicconfig.service.DynamicConfigTyp
 import com.huawei.sermant.backend.service.dynamicconfig.service.DynamicConfigurationFactoryService;
 import com.huawei.sermant.backend.service.dynamicconfig.service.DynamicConfigurationService;
 import com.huawei.sermant.backend.service.dynamicconfig.zookeeper.ZookeeperDynamicConfigurationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 
 /**
  *
@@ -35,24 +32,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class DynamicConfigurationFactoryServiceImpl implements DynamicConfigurationFactoryService {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicConfigurationFactoryServiceImpl.class);
+    /**
+     * 获取动态配置
+     *
+     * @param dct 动态配置类型
+     * @return 配置实例
+     * @throws Exception 异常
+     */
+    protected DynamicConfigurationService getDynamicConfigurationService(DynamicConfigType dct) throws Exception {
 
-    protected DynamicConfigurationService getDynamicConfigurationService(DynamicConfigType dct) {
-
-        if ( dct == DynamicConfigType.ZOO_KEEPER )
+        if (dct == DynamicConfigType.ZOO_KEEPER) {
             return ZookeeperDynamicConfigurationService.getInstance();
+        }
 
-        if ( dct == DynamicConfigType.KIE )
+        if (dct == DynamicConfigType.KIE) {
             return KieDynamicConfigurationServiceImpl.getInstance();
+        }
 
-        if ( dct == DynamicConfigType.NOP )
+        if (dct == DynamicConfigType.NOP) {
             return NopDynamicConfigurationService.getInstance();
+        }
 
         return null;
     }
 
     @Override
-    public DynamicConfigurationService getDynamicConfigurationService() {
+    public DynamicConfigurationService getDynamicConfigurationService() throws Exception {
         return this.getDynamicConfigurationService(Config.getDynamic_config_type());
     }
 }

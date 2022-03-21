@@ -15,7 +15,7 @@
         <plugin.setting.name>plugins.yaml</plugin.setting.name>
         <log.setting.name>logback.xml</log.setting.name>
         <env.cover.skip.flag>true</env.cover.skip.flag>
-        <config.source.dir>src/main/resources/config</config.source.dir>
+        <config.source.dir>config</config.source.dir>
         <config.output.dir>${package.agent.dir}/config</config.output.dir>
     </properties>
     <profiles>
@@ -80,12 +80,20 @@
             <artifactId>netty-all</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-inline</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -155,6 +163,18 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -184,7 +204,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Sermant-Version>${sermant.version}</Sermant-Version>
+                            <Sermant-Version>${project.version}</Sermant-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -245,6 +265,10 @@
                         <relocation>
                             <pattern>org.java_websocket</pattern>
                             <shadedPattern>${shade.common.prefix}.org.java_websocket</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.objectweb.asm</pattern>
+                            <shadedPattern>${shade.common.prefix}.org.objectweb.asm</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>org.slf4j</pattern>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,38 +17,29 @@
 package com.huawei.gray.dubbo.strategy.type;
 
 import com.huawei.gray.dubbo.strategy.TypeStrategy;
-import com.huawei.sermant.core.common.LoggerFactory;
+import com.huawei.gray.dubbo.utils.ReflectUtils;
 import com.huawei.sermant.core.lubanops.bootstrap.utils.StringUtils;
 
-import java.lang.reflect.Field;
-import java.util.logging.Logger;
+import java.util.Optional;
 
 /**
  * 实体匹配策略
  *
- * @author pengyuyi
- * @date 2021/10/13
+ * @author provenceee
+ * @since 2021-10-13
  */
 public class ObjectTypeStrategy extends TypeStrategy {
-    private static final Logger LOGGER = LoggerFactory.getLogger();
-
     @Override
-    public String getValue(Object arg, String type) {
-        try {
-            Field field = arg.getClass().getDeclaredField(getKey(type));
-            field.setAccessible(true);
-            Object object = field.get(arg);
-            return object == null ? null : String.valueOf(object);
-        } catch (Exception e) {
-            LOGGER.warning("Cannot get the field, type is " + type);
-            return null;
-        }
+    public Optional<String> getValue(Object arg, String type) {
+        return ReflectUtils.getFieldValue(arg, getKey(type)).map(String::valueOf);
     }
 
     @Override
     public boolean isMatch(String type) {
-        return StringUtils.isNotBlank(type) && type.startsWith(".") && !type.contains("(") && !type.contains(")")
-                && !type.contains("[") && !type.contains("]");
+        if (StringUtils.isBlank(type) || !type.startsWith(".")) {
+            return false;
+        }
+        return !type.contains("(") && !type.contains(")") && !type.contains("[") && !type.contains("]");
     }
 
     @Override

@@ -67,6 +67,12 @@ public class KafkaConf {
     @Value("${kafka.session.timeout.ms}")
     private String kafkaSessionTimeoutMs;
 
+    @Value("${fetch.min.bytes}")
+    private String kafkaFetchMinBytes;
+
+    @Value("${fetch.max.wait.ms}")
+    private String kafkaFetchMaxWaitMs;
+
     @Value("${kafka.key.serializer}")
     private String kafkaKeySerializer;
 
@@ -90,4 +96,7 @@ public class KafkaConf {
 
     @Value("${kafka.max.block.ms}")
     private String kafkaMaxBlockMs;
+
+    @Value("${heartbeat.cache}")
+    private String isHeartbeatCache;
 }

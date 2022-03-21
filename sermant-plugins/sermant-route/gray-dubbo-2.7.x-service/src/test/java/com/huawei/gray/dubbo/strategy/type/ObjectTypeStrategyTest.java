@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,63 @@
 package com.huawei.gray.dubbo.strategy.type;
 
 import com.huawei.gray.dubbo.strategy.TypeStrategy;
+import com.huawei.sermant.core.common.CommonConstant;
+import com.huawei.sermant.core.common.LoggerFactory;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 实体匹配策略测试
  *
- * @author pengyuyi
- * @date 2021/12/1
+ * @author provenceee
+ * @since 2021-12-01
  */
+@SuppressWarnings("checkstyle:all")
 public class ObjectTypeStrategyTest {
+    /**
+     * 初始化
+     */
+    @Before
+    public void before() {
+        Map<String, Object> map = new HashMap<>();
+        map.put(CommonConstant.LOG_SETTING_FILE_KEY, getClass().getResource("/logback-test.xml").getPath());
+        LoggerFactory.init(map);
+    }
+
+    /**
+     * 测试实体策略
+     */
     @Test
     public void testValue() {
         TypeStrategy strategy = new ObjectTypeStrategy();
         Entity entity = new Entity();
         entity.setTest("bar");
+
         // 正常情况
-        Assert.assertEquals("bar", strategy.getValue(entity, ".test"));
+        Assert.assertEquals("bar", strategy.getValue(entity, ".test").orElse(null));
+
         // 测试null
-        Assert.assertNotEquals("bar", strategy.getValue(new Entity(), ".test"));
+        Assert.assertNotEquals("bar", strategy.getValue(new Entity(), ".test").orElse(null));
+
+        // 测试找不到字段
+        Assert.assertNull(strategy.getValue(new Entity(), ".foo").orElse(null));
+
         // 测试不等于
         entity.setTest("foo");
-        Assert.assertNotEquals("bar", strategy.getValue(entity, ".test"));
+        Assert.assertNotEquals("bar", strategy.getValue(entity, ".test").orElse(null));
     }
 
-    private static class Entity {
+    /**
+     * 实体
+     *
+     * @since 2021-12-01
+     */
+    public static class Entity {
         private String test;
 
         public String getTest() {

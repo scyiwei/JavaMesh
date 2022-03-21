@@ -21,8 +21,6 @@ import com.huawei.sermant.backend.common.exception.KafkaTopicException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
@@ -34,7 +32,6 @@ import java.util.Properties;
  * @since 2021-08-07
  */
 public class KafkaProducerManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaProducerManager.class);
 
     private KafkaProducer<String, byte[]> producer;
 

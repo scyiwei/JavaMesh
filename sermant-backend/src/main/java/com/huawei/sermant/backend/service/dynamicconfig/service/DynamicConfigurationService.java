@@ -24,10 +24,16 @@ public interface DynamicConfigurationService extends AutoCloseable {
         return addConfigListener(key, getDefaultGroup(), listener);
     }
 
-    default boolean addGroupListener(String Group, ConfigurationListener listener) {
+    /**
+     * 添加监听器
+     *
+     * @param group 配置组
+     * @param listener 监听器
+     * @return 是否成功
+     */
+    default boolean addGroupListener(String group, ConfigurationListener listener) {
         throw new UnsupportedOperationException();
     }
-
 
     default boolean removeConfigListener(String key, ConfigurationListener listener) {
         return removeConfigListener(key, getDefaultGroup(), listener);
@@ -41,37 +47,40 @@ public interface DynamicConfigurationService extends AutoCloseable {
 
     boolean removeConfigListener(String key, String group, ConfigurationListener listener);
 
-
-
-
     String getConfig(String key, String group);
 
-
-    default String getConfig(String key)
-    {
+    /**
+     * 获取配置
+     *
+     * @param key key
+     * @return 配置
+     */
+    default String getConfig(String key) {
         return getConfig(key, getDefaultGroup());
     }
-
 
     default boolean publishConfig(String key, String content) {
         return publishConfig(key, getDefaultGroup(), content);
     }
 
-
-    boolean publishConfig(String key, String group, String content) ;
-
+    /**
+     * 推送配置
+     *
+     * @param key key
+     * @param group group
+     * @param content content
+     * @return 是否成功
+     */
+    boolean publishConfig(String key, String group, String content);
 
     String getDefaultGroup();
 
-
     long getDefaultTimeout();
-
 
     @Override
     default void close() throws Exception {
         throw new UnsupportedOperationException();
     }
-
 
     default boolean removeConfig(String key, String group) throws Exception {
         throw new UnsupportedOperationException();
@@ -88,5 +97,4 @@ public interface DynamicConfigurationService extends AutoCloseable {
     default List<String> listConfigsFromConfig(String key, String group) throws Exception {
         throw new UnsupportedOperationException();
     }
-
 }

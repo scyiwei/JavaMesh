@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import java.util.regex.Pattern;
 /**
  * 正则表达式匹配策略
  *
- * @author pengyuyi
- * @date 2021/10/23
+ * @author provenceee
+ * @since 2021-10-23
  */
 public class RegexValueMatchStrategy implements ValueMatchStrategy {
     @Override
     public boolean isMatch(List<String> values, String arg) {
         return !CollectionUtils.isEmpty(values) && values.get(0) != null && arg != null
-                && Pattern.matches(values.get(0), arg);
+            && Pattern.matches(values.get(0), arg);
     }
 }

@@ -16,16 +16,15 @@
 
 package com.huawei.sermant.backend.server;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.huawei.sermant.backend.cache.HeartbeatCache;
 import com.huawei.sermant.backend.common.conf.KafkaConf;
 import com.huawei.sermant.backend.entity.Address;
 import com.huawei.sermant.backend.entity.AddressScope;
 import com.huawei.sermant.backend.entity.AddressType;
 import com.huawei.sermant.backend.entity.AgentInfo;
 import com.huawei.sermant.backend.entity.HeartBeatResult;
+import com.huawei.sermant.backend.entity.HeartbeatEntity;
 import com.huawei.sermant.backend.entity.MonitorItem;
-import com.huawei.sermant.backend.entity.PluginInfo;
 import com.huawei.sermant.backend.entity.Protocol;
 import com.huawei.sermant.backend.entity.PublishConfigEntity;
 import com.huawei.sermant.backend.entity.RegisterResult;
@@ -33,7 +32,13 @@ import com.huawei.sermant.backend.kafka.KafkaConsumerManager;
 import com.huawei.sermant.backend.service.dynamicconfig.DynamicConfigurationFactoryServiceImpl;
 import com.huawei.sermant.backend.service.dynamicconfig.service.DynamicConfigurationService;
 import com.huawei.sermant.backend.service.dynamicconfig.utils.LabelGroupUtils;
+import com.huawei.sermant.backend.util.DateUtil;
 import com.huawei.sermant.backend.util.RandomUtil;
+import com.huawei.sermant.backend.util.UuidUtil;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -41,13 +46,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -57,35 +67,37 @@ public class HttpServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServer.class);
 
+    private static final String SUCCESS = "success";
+    private static final String FAILED = "failed";
+    private static final int DEFAULT_IP_INDEX = 0;
+    private static final int NULL_IP_LENGTH = 0;
+    private static final int MAX = 10;
+
     @Autowired
     private KafkaConf conf;
 
     @Autowired
     private DynamicConfigurationFactoryServiceImpl dynamicConfigurationFactoryService;
 
-    private final String DEFAULT_AGENT_NAME = "sermant";
-    private final String DEFAULT_PLUGIN_VERSION = "unknown";
-    private final String SUCCESS = "success";
-    private final String FAILED = "failed";
 
-    RandomUtil RANDOM_UTIL = new RandomUtil();
-    private final Integer MIN = 1;
-    private final Integer MAX = 10;
+    private final RandomUtil randomUtil = new RandomUtil();
+    private final DateUtil dateUtil = new DateUtil();
 
-    private final Long random_long = RANDOM_UTIL.getRandomLong(MIN, MAX);
-    private final Integer random_int = RANDOM_UTIL.getRandomInt(MAX);
-    private final String random_str = RANDOM_UTIL.getRandomStr(MAX);
+    private long randomLong = UuidUtil.getId();
+    private final int randomInt = randomUtil.getRandomInt(MAX);
+    private final String randomStr = randomUtil.getRandomStr(MAX);
 
 
     @PostMapping("/master/v1/register")
     public String invokePost(@RequestBody JSONObject jsonParam) {
+        long instanceId = UuidUtil.getId();
         RegisterResult registerResult = new RegisterResult();
-        registerResult.setAppId(random_long);
-        registerResult.setEnvId(random_long);
-        registerResult.setDomainId(random_int);
-        registerResult.setAgentVersion(random_str);
-        registerResult.setInstanceId(random_long);
-        registerResult.setBusinessId(random_long);
+        registerResult.setAppId(randomLong);
+        registerResult.setEnvId(randomLong);
+        registerResult.setDomainId(randomInt);
+        registerResult.setAgentVersion(randomStr);
+        registerResult.setInstanceId(instanceId);
+        registerResult.setBusinessId(randomLong);
         return JSONObject.toJSONString(registerResult);
     }
 
@@ -95,38 +107,25 @@ public class HttpServer {
         Hashtable<String, String> map = new Hashtable<>();
 
         HeartBeatResult heartBeatResult = new HeartBeatResult();
-        heartBeatResult.setHeartBeatInterval(random_int);
+        heartBeatResult.setHeartBeatInterval(randomInt);
         heartBeatResult.setAttachment(map);
         heartBeatResult.setMonitorItemList(Collections.singletonList(getMonitorItem(map)));
         heartBeatResult.setSystemProperties(map);
         heartBeatResult.setAccessAddressList(Collections.singletonList(getAddress()));
-        heartBeatResult.setInstanceStatus(random_int);
-        heartBeatResult.setBusinessId(random_long);
-        heartBeatResult.setMd5(random_str);
+        heartBeatResult.setInstanceStatus(randomInt);
+        heartBeatResult.setBusinessId(randomLong);
+        heartBeatResult.setMd5(randomStr);
         return JSONObject.toJSONString(heartBeatResult);
     }
 
     @GetMapping("/getPluginsInfo")
     public String invokeGet() {
-        ConsumerRecords<String, String> consumerRecords = getHeartbeatInfo();
-        AgentInfo agentInfo = new AgentInfo();
-        Map<String, PluginInfo> pluginCache = new HashMap<String, PluginInfo>();
-        for (ConsumerRecord<String, String> record : consumerRecords) {
-            HashMap hashMap = JSON.parseObject(record.value(), HashMap.class);
-            agentInfo.setIp(hashMap.get("ip"));
-            agentInfo.setHeartbeatTime(hashMap.get("heartbeatVersion"));
-            agentInfo.setLastHeartbeatTime(hashMap.get("lastHeartbeat"));
-            agentInfo.setVersion(hashMap.get("version"));
-            String name = (String) hashMap.getOrDefault("pluginName", DEFAULT_AGENT_NAME);
-            if (!name.equals(DEFAULT_AGENT_NAME)) {
-                PluginInfo pluginInfo = new PluginInfo();
-                pluginInfo.setName(name);
-                pluginInfo.setVersion((String) hashMap.getOrDefault("pluginVersion", DEFAULT_PLUGIN_VERSION));
-                pluginCache.put(name, pluginInfo);
-            }
+        if (Boolean.parseBoolean(conf.getIsHeartbeatCache())) {
+            return JSONObject.toJSONString(getHeartbeatMessageCache());
+        } else {
+            ConsumerRecords<String, String> consumerRecords = getHeartbeatInfo();
+            return JSONObject.toJSONString(getHeartbeatMessage(consumerRecords));
         }
-        agentInfo.setPluginsInfos(new ArrayList<>(pluginCache.values()));
-        return JSONObject.toJSONString(agentInfo);
     }
 
     @PostMapping("/publishConfig")
@@ -145,22 +144,22 @@ public class HttpServer {
 
     public MonitorItem getMonitorItem(Hashtable<String, String> map) {
         MonitorItem monitorItem = new MonitorItem();
-        monitorItem.setCollectorName(random_str);
-        monitorItem.setInterval(random_int);
-        monitorItem.setCollectorId(random_int);
-        monitorItem.setMonitorItemId(random_long);
-        monitorItem.setStatus(random_int);
+        monitorItem.setCollectorName(randomStr);
+        monitorItem.setInterval(randomInt);
+        monitorItem.setCollectorId(randomInt);
+        monitorItem.setMonitorItemId(randomLong);
+        monitorItem.setStatus(randomInt);
         monitorItem.setParameters(map);
         return monitorItem;
     }
 
     public Address getAddress() {
         Address address = new Address();
-        address.setHost(random_str);
-        address.setPort(random_int);
-        address.setSport(random_int);
-        address.setType(AddressType.access);
-        address.setScope(AddressScope.outer);
+        address.setHost(randomStr);
+        address.setPort(randomInt);
+        address.setSport(randomInt);
+        address.setType(AddressType.ACCESS);
+        address.setScope(AddressScope.OUTER);
         address.setProtocol(Protocol.WS);
         return address;
     }
@@ -176,5 +175,61 @@ public class HttpServer {
             LOGGER.error("getHeartbeatInfo failed");
         }
         return consumerRecords;
+    }
+
+    private String pluginMapToStr(Map<String, String> map) {
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            result.append("\n").append(entry.getKey()).append("-").append(entry.getValue());
+        }
+        return result.toString();
+    }
+
+    private List<AgentInfo> getHeartbeatMessage(ConsumerRecords<String, String> consumerRecords) {
+        Map<String, AgentInfo> agentMap = new HashMap<>();
+        for (ConsumerRecord<String, String> record : consumerRecords) {
+            HeartbeatEntity heartbeatEntity = JSON.parseObject(record.value(), HeartbeatEntity.class);
+            setAgentInfo(agentMap, heartbeatEntity);
+        }
+        return new ArrayList<>(agentMap.values());
+    }
+
+    private List<AgentInfo> getHeartbeatMessageCache() {
+        Map<String, HeartbeatEntity> heartbeatMessages = HeartbeatCache.getHeartbeatMessages();
+        if (heartbeatMessages != null) {
+            Map<String, AgentInfo> agentMap = new HashMap<>();
+            for (HeartbeatEntity heartbeatEntity : heartbeatMessages.values()) {
+                setAgentInfo(agentMap, heartbeatEntity);
+            }
+            return new ArrayList<>(agentMap.values());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private void setAgentInfo(Map<String, AgentInfo> agentMap, HeartbeatEntity heartbeatEntity) {
+        List<String> ips = heartbeatEntity.getIp();
+        String instanceId = heartbeatEntity.getInstanceId();
+        if (ips == null || ips.size() == NULL_IP_LENGTH) {
+            return;
+        }
+        if (agentMap.get(instanceId) == null) {
+            String ip = ips.get(DEFAULT_IP_INDEX);
+            AgentInfo agentInfo = new AgentInfo();
+            agentInfo.setIp(ip);
+            agentInfo.setVersion(heartbeatEntity.getVersion());
+            agentInfo.setPluginsMap(new HashMap<String, String>());
+            agentInfo.setInstanceId(instanceId);
+            agentInfo.setAppName(heartbeatEntity.getApp());
+            agentMap.put(instanceId, agentInfo);
+        }
+        if (agentMap.get(instanceId) != null && heartbeatEntity.getPluginName() != null) {
+            AgentInfo agentInfo = agentMap.get(instanceId);
+            Map<String, String> pluginMap = agentInfo.getPluginsMap();
+            pluginMap.put(heartbeatEntity.getPluginName(), heartbeatEntity.getPluginVersion());
+            agentInfo.setPluginsMap(pluginMap);
+            agentInfo.setLastHeartbeatTime(dateUtil.getFormatDate(heartbeatEntity.getLastHeartbeat()));
+            agentInfo.setHeartbeatTime(dateUtil.getFormatDate(heartbeatEntity.getHeartbeatVersion()));
+        }
     }
 }

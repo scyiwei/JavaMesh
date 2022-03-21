@@ -21,11 +21,11 @@ git clone -b develop https://github.com/huaweicloud/Sermant.git
 mvn clean package -Dpmd.skip=true -Dtest.skip=true -Drat.skip=true
 ```
 
-完成打包后，在`Sermant`根目录生成目录`sermant-agent-2.0.5`
+完成打包后，在`Sermant`根目录生成目录`sermant-agent-x.x.x`
 
 ### 3、配置配置中心
 
-配置`Sermant`配置中心类型与地址，配置文件路劲`/Sermant/sermant-agent-2.0.5/agent/config/config.properties`
+配置`Sermant`配置中心类型与地址，配置文件路劲`/Sermant/sermant-agent-x.x.x/agent/config/config.properties`
 
 ```properties
 dynamicconfig.timeout_value=30000
@@ -40,6 +40,14 @@ dynamicconfig.dynamic_config_type=ZOO_KEEPER
 dynamicconfig.kie_url=http://127.0.0.1:30110
 ```
 
+修改`${agent路径}/pluginPackge/flowcontrol/config/config.yaml`
+
+```yaml
+flow.control.plugin:
+  flowFramework: SENTINEL
+  useAgentConfigCenter: true # 是否使用agent配置中心
+```
+
 ### 4、打包并启动应用
 
 #### 4.1 打包[Demo应用](../../../sermant-plugins/sermant-flowcontrol/flowcontrol-demos/flowcontrol-demo)
@@ -47,7 +55,7 @@ dynamicconfig.kie_url=http://127.0.0.1:30110
 #### 4.2 启动应用
 
 ```shell
-java -javaagent:Sermant路径\sermant-agent-2.0.5\agent\sermant-agent.jar=appName=flowControlDemo -Dproject.name=flowControlDemo -jar FlowControlDemo.jar
+java -javaagent:Sermant路径\sermant-agent-x.x.x\agent\sermant-agent.jar=appName=flowControlDemo -Dproject.name=flowControlDemo -jar FlowControlDemo.jar
 ```
 
 其中:

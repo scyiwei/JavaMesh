@@ -24,6 +24,12 @@ package com.huawei.sermant.backend.service.dynamicconfig.service;
  */
 public interface DynamicConfigurationFactoryService {
 
-    public DynamicConfigurationService getDynamicConfigurationService();
+    /**
+     * 获取动态配置接口
+     *
+     * @return 动态配置
+     * @throws Exception 异常
+     */
+    DynamicConfigurationService getDynamicConfigurationService() throws Exception;
 
 }

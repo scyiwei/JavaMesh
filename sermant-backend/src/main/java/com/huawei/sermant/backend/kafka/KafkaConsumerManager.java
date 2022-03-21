@@ -20,14 +20,10 @@ import com.huawei.sermant.backend.common.conf.KafkaConf;
 import com.huawei.sermant.backend.common.exception.KafkaTopicException;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 public class KafkaConsumerManager {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaProducerManager.class);
 
     private KafkaConsumer<String, String> consumer;
 
@@ -66,6 +62,8 @@ public class KafkaConsumerManager {
         properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, conf.getKafkaAutoCommitIntervalMs());
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, conf.getKafkaAutoOffsetReset());
         properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, conf.getKafkaSessionTimeoutMs());
+        properties.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, conf.getKafkaFetchMinBytes());
+        properties.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, conf.getKafkaFetchMaxWaitMs());
         consumer = new KafkaConsumer<String, String>(properties);
     }
 

@@ -1,12 +1,13 @@
-<img src="docs/binary-docs/sermant-logo.png" width="30%" syt height="530%" />
+<img src="docs/binary-docs/sermant-logo.png" width="25%" syt height="25%" />
 
 ### A proxyless service mesh solution based on Javaagent
+
 [![Gitter](https://badges.gitter.im/SermantUsers/community.svg)](https://gitter.im/SermantUsers/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 [![CI/IT Tests](https://github.com/huaweicloud/Sermant/workflows/Java%20CI%20with%20Maven/badge.svg?branch=develop)](https://github.com/huaweicloud/Sermant/actions?query=workflow:Java%20CI%20with%20Maven%20event:push%20branch:develop)
 ## What is Sermant
 
-**Sermant** is a proxyless service mesh technology based on JavaAgent . It leverages the [JavaAgent](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/package-summary.html) to instrument the host application with enhanced service governance function, in order to solve the service governance problem, in the massive micro-service architecture.
+**Sermant** (also known as Java-mesh) is a proxyless **ser**vice **m**esh technology based on J**a**vaAge**nt** . It leverages the [JavaAgent](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/package-summary.html) to instrument the host application with enhanced service governance function, in order to solve the service governance problem, in the massive micro-service architecture.
 
 Sermant's purpose also includes building a plugin-development ecosystem to help developers develop the service governance function more easily while not interfering the business code. The Sermant architecture is depicted as follows.
 
@@ -19,7 +20,7 @@ As described above, Sermant's Javaagent has two layers of functions.
 
 Sermant's Javaagent widely adopts class isolation technology in order to eliminate the class load conflicts between framework code, plugin code, and application code.
 
-A microservice architecture using Sermant has the following has the following three components, which is depicted in the following diagram.
+A microservice architecture using Sermant has the following three components, which is depicted in the following diagram.
 
 ![pic](docs/binary-docs/sermant-rt-arch.png)
 
@@ -40,15 +41,9 @@ Execute *maven* command to package the **Sermant** project's [demo module](serma
 mvn clean package -Dmaven.test.skip -Pexample
 ```
 
-Execute *maven* command to package the **Sermant** project's [back-end module](sermant-backend).
-
-```shell
-mvn clean package -Dmaven.test.skip -Pbackend
-```
-
 ### Start Sermant
 
-Start **Sermant** backend
+Start **Sermant** backend, **Prepare zookeeper**.
 
 ```shell
 # Run under Linux
@@ -75,7 +70,11 @@ java -cp sermant-plugins\sermant-example\demo-application\target\demo-applicatio
   -javaagent:sermant-agent-x.x.x\agent\sermant-agent.jar=appName=test ^
   com.huawei.example.demo.DemoApplication
 ```
+Check running status of Sermant. In this example, open the browser and navigate to the URL "http://localhost:8900".
 
+![pic](docs/binary-docs/backend_sermant_info.png)
+
+#### Please refer to the  [Service Register & Discovery Plugin QuickStart](docs/QuickStart.md) for details.
 
 ## More documents to follow
 
@@ -84,7 +83,6 @@ Please refer to the  [Development Guide](docs/README.md)
 ## License
 
 Sermant adopts [Apache 2.0 License.](/LICENSE)
-
 
 ## How to contribute
 

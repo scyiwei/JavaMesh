@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,19 @@
 
 package com.huawei.route.common.gray.config;
 
+import com.huawei.route.common.gray.constants.GrayConstant;
+import com.huawei.sermant.core.config.ConfigManager;
 import com.huawei.sermant.core.config.common.ConfigTypeKey;
 import com.huawei.sermant.core.plugin.config.PluginConfig;
-import com.huawei.route.common.gray.constants.GrayConstant;
+import com.huawei.sermant.core.service.meta.ServiceMeta;
 
 import java.util.Map;
 
 /**
  * 灰度配置
  *
- * @author pengyuyi
- * @date 2021/11/18
+ * @author provenceee
+ * @since 2021-11-18
  */
 @ConfigTypeKey("gray.plugin")
 public class GrayConfig implements PluginConfig {
@@ -51,9 +53,30 @@ public class GrayConfig implements PluginConfig {
     private String dubboGroup = "public=default";
 
     /**
+     * 自定义key
+     */
+    private String springCloudKey = "SPRINGCLOUD_GRAY_LABLE";
+
+    /**
+     * 自定义组名
+     */
+    private String springCloudGroup = "struct=spring";
+
+    /**
      * 其它配置
      */
     private Map<String, String> properties;
+
+    /**
+     * 构造方法
+     */
+    public GrayConfig() {
+        ServiceMeta serviceMeta = ConfigManager.getConfig(ServiceMeta.class);
+        if (serviceMeta == null) {
+            return;
+        }
+        this.grayVersion = serviceMeta.getVersion();
+    }
 
     public String getGrayVersion() {
         return grayVersion;
@@ -105,6 +128,22 @@ public class GrayConfig implements PluginConfig {
 
     public void setDubboGroup(String dubboGroup) {
         this.dubboGroup = dubboGroup;
+    }
+
+    public String getSpringCloudKey() {
+        return springCloudKey;
+    }
+
+    public void setSpringCloudKey(String springCloudKey) {
+        this.springCloudKey = springCloudKey;
+    }
+
+    public String getSpringCloudGroup() {
+        return springCloudGroup;
+    }
+
+    public void setSpringCloudGroup(String springCloudGroup) {
+        this.springCloudGroup = springCloudGroup;
     }
 
     public Map<String, String> getProperties() {

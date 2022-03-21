@@ -24,7 +24,10 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
+                <module>flowcontrol-common</module>
                 <module>flowcontrol-plugin</module>
+                <module>flowcontrol-service</module>
+                <module>flowcontrol-resilience4j-service</module>
             </modules>
         </profile>
         <profile>
@@ -33,16 +36,18 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>flowcontrol-plugin</module>
                 <module>flowcontrol-server</module>
+                <module>flowcontrol-demos</module>
             </modules>
         </profile>
         <profile>
             <id>all</id>
             <modules>
+                <module>flowcontrol-common</module>
                 <module>flowcontrol-plugin</module>
+                <module>flowcontrol-service</module>
+                <module>flowcontrol-resilience4j-service</module>
                 <module>flowcontrol-server</module>
-                <module>flowcontrol-demos</module>
             </modules>
         </profile>
     </profiles>

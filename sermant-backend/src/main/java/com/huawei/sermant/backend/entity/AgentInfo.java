@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2021 Huawei Technologies Co., Ltd. All rights reserved.
+ * Copyright (C) 2021-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,14 @@ package com.huawei.sermant.backend.entity;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Map;
+
+/**
+ * 插件信息
+ *
+ * @author xuezechao
+ * @since 2022-02-28
+ */
 
 @Getter
 @Setter
@@ -33,5 +40,9 @@ public class AgentInfo {
 
     private Object heartbeatTime;
 
-    private List<PluginInfo> pluginsInfos;
+    private Map<String, String> pluginsMap;
+
+    private Object instanceId;
+
+    private Object appName;
 }

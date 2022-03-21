@@ -1,86 +1,93 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Copyright (C) 2022-2022 Huawei Technologies Co., Ltd. All rights reserved.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-/*
- * Based on org/apache/skywalking/apm/plugin/dubbo/DubboInterceptor.java
- * from the Apache Skywalking project.
+ *
  */
 
 package com.huawei.flowcontrol;
 
-import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.huawei.flowcontrol.common.config.CommonConst;
+import com.huawei.flowcontrol.common.entity.DubboRequestEntity;
+import com.huawei.flowcontrol.common.entity.FlowControlResult;
+import com.huawei.flowcontrol.common.util.ConvertUtils;
+import com.huawei.flowcontrol.service.InterceptorSupporter;
+import com.huawei.sermant.core.plugin.agent.entity.ExecuteContext;
+
 import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.Invoker;
 import com.alibaba.dubbo.rpc.Result;
 import com.alibaba.dubbo.rpc.RpcContext;
+import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.RpcResult;
-import com.huawei.flowcontrol.entry.EntryFacade;
-import com.huawei.sermant.core.agent.common.BeforeResult;
 
-import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Locale;
 
 /**
- * alibaba dubbo拦截后的增强类
- * 埋点定义sentinel资源
+ * alibaba dubbo拦截后的增强类 埋点定义sentinel资源
  *
- * @author liyi
- * @since 2020-08-26
+ * @author zhouss
+ * @since 2022-02-10
  */
-public class AlibabaDubboInterceptor extends DubboInterceptor {
+public class AlibabaDubboInterceptor extends InterceptorSupporter {
+    /**
+     * 转换apache dubbo 注意，该方法不可抽出，由于宿主依赖仅可由该拦截器加载，因此抽出会导致找不到类
+     *
+     * @param invocation 调用信息
+     * @return DubboRequestEntity
+     */
+    private static DubboRequestEntity convertToAlibabaDubboEntity(com.alibaba.dubbo.rpc.Invocation invocation) {
+        // 高版本使用api invocation.getTargetServiceUniqueName获取路径，此处使用版本加接口，达到的最终结果一致
+        String apiPath = ConvertUtils.buildApiPath(invocation.getInvoker().getInterface().getName(),
+            invocation.getAttachment(ConvertUtils.DUBBO_ATTACHMENT_VERSION), invocation.getMethodName());
+        return new DubboRequestEntity(apiPath, Collections.unmodifiableMap(invocation.getAttachments()));
+    }
+
     @Override
-    public void before(Object obj, Method method, Object[] allArguments, BeforeResult result) {
-        Invoker<?> invoker = null;
-        if (allArguments[0] instanceof Invoker) {
-            invoker = (Invoker<?>) allArguments[0];
-        }
-        Invocation invocation = null;
+    protected final ExecuteContext doBefore(ExecuteContext context) {
+        final Object[] allArguments = context.getArguments();
+        final FlowControlResult result = new FlowControlResult();
         if (allArguments[1] instanceof Invocation) {
-            invocation = (Invocation) allArguments[1];
+            Invocation invocation = (Invocation) allArguments[1];
+            chooseDubboService().onBefore(convertToAlibabaDubboEntity(invocation), result,
+                RpcContext.getContext().isProviderSide());
+            if (result.isSkip()) {
+                context.skip(new RpcResult(
+                    wrapException(invocation, (Invoker<?>) allArguments[0], result.getResult().getMsg())));
+            }
         }
-        if (invocation == null || invoker == null) {
-            return;
-        }
-        try {
-            EntryFacade.INSTANCE.tryEntry(invocation);
-        } catch (BlockException ex) {
-            // 流控异常返回上游
-            result.setResult(new RpcResult(ex.toRuntimeException()));
-            handleBlockException(ex, getResourceName(invoker.getInterface().getName(), invocation.getMethodName()),
-                    "AlibabaDubboInterceptor consumer", EntryFacade.DubboType.ALIBABA);
-        }
+        return context;
+    }
+
+    private RpcException wrapException(Invocation invocation, Invoker<?> invoker, String msg) {
+        return new RpcException(CommonConst.TOO_MANY_REQUEST_CODE,
+            String.format(Locale.ENGLISH, "Failed to invoke service %s.%s: %s",
+                invoker.getInterface().getName(), invocation.getMethodName(), msg));
     }
 
     @Override
-    public Object after(Object obj, Method method, Object[] allArguments, Object ret) {
-        Result result = (Result) ret;
-        // 记录dubbo的exception
-        if (result != null && result.hasException()) {
-            EntryFacade.INSTANCE.tryTraceEntry(result.getException(), RpcContext.getContext().isProviderSide(),
-                    EntryFacade.DubboType.ALIBABA);
+    protected final ExecuteContext doAfter(ExecuteContext context) {
+        Result result = (Result) context.getResult();
+        if (result != null) {
+            chooseDubboService().onAfter(result, RpcContext.getContext().isProviderSide(), result.hasException());
         }
-        EntryFacade.INSTANCE.exit(EntryFacade.DubboType.ALIBABA);
-        return ret;
+        return context;
     }
 
     @Override
-    public void onThrow(Object obj, Method method, Object[] arguments, Throwable t) {
-        if (t != null) {
-            EntryFacade.INSTANCE.tryTraceEntry(t, RpcContext.getContext().isProviderSide(), EntryFacade.DubboType.ALIBABA);
-        }
-        EntryFacade.INSTANCE.exit(EntryFacade.DubboType.ALIBABA);
+    protected final ExecuteContext doThrow(ExecuteContext context) {
+        chooseDubboService().onThrow(context.getThrowable(), RpcContext.getContext().isProviderSide());
+        return context;
     }
 }
