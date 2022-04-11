@@ -1,199 +1,97 @@
-# JavaMesh
+<img src="docs/binary-docs/sermant-logo.png" width="25%" syt height="25%" />
 
-## 概述
+### A proxyless service mesh solution based on Javaagent
 
-JavaMesh是一个基于ByteBuddy字节码技术开发的javaagent框架;框架当前提供了流量控制，流量录制插件;基于JavaMesh,只需实现少量的接口即可快速开发自己需要实现的agent功能;框架提供了基于netty的统一消息发送模块;只需部署netty-server服务，即可实现心跳或数据的传输,同时支持自定义消息类型。
+[![Gitter](https://badges.gitter.im/SermantUsers/community.svg)](https://gitter.im/SermantUsers/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![CI/IT Tests](https://github.com/huaweicloud/Sermant/workflows/Java%20CI%20with%20Maven/badge.svg?branch=develop)](https://github.com/huaweicloud/Sermant/actions?query=workflow:Java%20CI%20with%20Maven%20event:push%20branch:develop)
+## What is Sermant
 
-## 模块说明
+**Sermant** (also known as Java-mesh) is a proxyless **ser**vice **m**esh technology based on J**a**vaAge**nt** . It leverages the [JavaAgent](https://docs.oracle.com/javase/8/docs/api/java/lang/instrument/package-summary.html) to instrument the host application with enhanced service governance function, in order to solve the service governance problem, in the massive micro-service architecture.
 
- - javamesh-agentcore: 核心功能
-   - javamesh-agentcore/javamesh-agentcore-core: 核心模块
-   - javamesh-agentcore/javamesh-agentcore-premain: 启动入口模块
- - javamesh-backend: 消息发送模块服务端
- - javamesh-package: 打包模块  
- - javamesh-prepare: 初始化模块，现用作清理临时文件
- - javamesh-samples: 样品模块，内含各种功能的插件及其附加件
-   - javamesh-samples/javamesh-example: 插件示例
-   - javamesh-samples/javamesh-flowcontrol: 流控功能
-   - javamesh-samples/javamesh-server-monitor: 服务监控功能
-   - javamesh-samples/javamesh-flowrecord: 流量录制回放功能
+Sermant's purpose also includes building a plugin-development ecosystem to help developers develop the service governance function more easily while not interfering the business code. The Sermant architecture is depicted as follows.
 
-## 打包流程说明
+![pic](docs/binary-docs/sermant-product-arch.png)
 
-JavaMesh的打包流程大致分为以下步骤：
+As described above, Sermant's Javaagent has two layers of functions.
 
-- prepare: 清理临时文件夹并拷贝外部插件、后端和前端
-- agent: 编译、打包核心功能和插件
-- example: 编译、打包核心功能和示例模块(默认不开启)
-- ext: 编译、打包插件附带的后端、前端和其他附加件
-- package: 将以上的打包结果归档为产品包
-- all: 执行以上全部步骤(比默认情况多打示例模块)
+- Framework core layer. The core layer provides Sermant's basic framework capability, in order to ease the plugin development. The function of this layer includes heart beat, data transmit, dynamic configuration, etc.
+- Plugin service layer. The plugin provides actual governance service for the application. The developer can either develop simple plugin by directly leveraging framework core service, or can develop complex plugin by developing plugin's own complex service-governance function.
 
-## 产品目录说明
+Sermant's Javaagent widely adopts class isolation technology in order to eliminate the class load conflicts between framework code, plugin code, and application code.
 
-正常打包结束后，将在工程目录下生成一个javamesh-agent-x.x.x文件夹，以及javamesh-agent-x.x.x.tar文件，前者是打包的临时目录，后者为产品包，前者即为后者的解压内容。
+A microservice architecture using Sermant has the following three components, which is depicted in the following diagram.
 
-- javamesh-agent-x.x.x/agent: javamesh-agent的客户端
-  - javamesh-agent-x.x.x/agent/javamesh-agent.jar: javamesh-agent的agent包
-  - javamesh-agent-x.x.x/agent/apm.config: javamesh-agent的配置文件
-  - javamesh-agent-x.x.x/agent/core: javamesh-agent的核心实现包存放目录
-  - javamesh-agent-x.x.x/agent/plugins: javamesh-agent的插件包存放目录
-- javamesh-agent-x.x.x/server: javamesh-agent和各个插件的相应后端存放目录
-- javamesh-agent-x.x.x/webapp: 各个后端对应的前端目录
+![pic](docs/binary-docs/sermant-rt-arch.png)
 
-## 示例说明
+- Sermant Javaagent: dynamically instrument the application for the service governance capability.
+- Sermant Backend: provide the connection and the pre-processing service for the Javaagents' all uploaded-data.
+- Dynamic configuration center: Providing the instructions by dynamically update the config to the listening Javaagent. Dynamic configuration center is not directly provided by Sermant project. The projects currently support servicecomb-kie, etc.
 
-### [示例插件](javamesh-samples/javamesh-example/demo-plugin)
 
-示例插件中将展示以下内容：
+## Quick start
 
-- 如何编写一个增强定义[EnhanceDefinition](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/definition/EnhanceDefinition.java)
-  - 如何定位到一个被注解修饰的类[DemoAnnotationDefinition](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/definition/DemoAnnotationDefinition.java)
-  - 如何通过名称定位到一个类[DemoNameDefinition](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/definition/DemoNameDefinition.java)
-  - 如何定位到一个超类的子类[DemoSuperTypeDefinition](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/definition/DemoSuperTypeDefinition.java)
-- 如何编写一个拦截器[Interceptor](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/interceptors/Interceptor.java)
-  - 如何编写一个构造函数的拦截器[DemoConstInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoConstInterceptor.java)
-  - 如何编写一个示例方法的拦截器[DemoInstInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoInstInterceptor.java)
-  - 如何编写一个静态方法的拦截器[DemoStaticInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoStaticInterceptor.java)
-- 如何编写一个插件服务[DemoService](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/service/DemoService.java)
-- 如何在插件端使用日志功能[DemoLoggerInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoLoggerInterceptor.java)
-- 如何在插件端使用统一配置[DemoConfigInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoConfigInterceptor.java)
-- 如何在插件端使用心跳功能[DemoHeartBeatService](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/service/DemoHeartBeatService.java)
-- 如何在插件端使用链路监控功能[DemoTraceInterceptor](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/interceptor/DemoTraceInterceptor.java)
+### Download or compile
 
-### [示例插件拦截的应用](javamesh-samples/javamesh-example/demo-application)
+Click [here](https://github.com/huaweicloud/Sermant/releases) to download **Sermant** binary package. If you will to compile the project yourself, please follow the following steps.
 
-示例插件拦截的应用为[示例插件](javamesh-samples/javamesh-example/demo-plugin)中的示例功能提供了各种被拦截点。
+Execute *maven* command to package the **Sermant** project's [demo module](sermant-plugins/sermant-example).
 
-## 快速开始
-
-### 环境安装
-
-- [jdk](https://www.oracle.com/java/technologies/downloads/)
-- [maven](https://maven.apache.org/download.cgi)
-- [idea](https://www.jetbrains.com/idea/)
-
-### 编译出包
-
-- 下载`JavaMesh`源码,用`idea`打开
-- 在`File | Settings | Build, Execution, Deployment | Build Tools | Maven`中配置`maven`信息
-- 在`idea`中执行`mvn clean package`
-- 编译结果文件:`JavaMesh\javamesh-agent-x.x.x.tar`
-
-### 运行
-
-#### 终端
-
-- 打包[示例插件拦截的应用](javamesh-samples/javamesh-example/demo-application)
-
-- 执行以下命令启动示例应用
-```bat
-java -javaagent:${JavaMesh}\javamesh-agent-x.x.x\agent\javamesh-agent.jar=appName=${appName} ^
-    -cp .\demo-application-1.0.0.jar ^
-    com.huawei.example.demo.DemoApplication
+```shell
+mvn clean package -Dmaven.test.skip -Pexample
 ```
-其中`${JavaMesh}`是框架项目路径,`${appName}`为应用名称,可任意取值
 
-#### IDEA
+### Start Sermant
 
-- IDEA挂载JavaMesh,需在应用`Run Configuration -> VM options`
-  加入`-javaagent:${JavaMesh}\javamesh-agent-x.x.x\agent\javamesh-agent.jar=appName=${appName}`
-  即可,其中`${JavaMesh}`是框架项目路径,`${appName}`为应用名称。
-- 运行[应用](javamesh-samples/javamesh-example/demo-application/src/main/java/com/huawei/example/demo/DemoApplication.java)
+Start **Sermant** backend, **Prepare zookeeper**.
 
-## 插件开发
-框架采用SPI机制进行插件的加载，插件的开发需要在resources/META-INF/service创建相应的文件(文件名与实现接口的全限定名一致)
-### [增强类接口](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/definition/EnhanceDefinition.java)
-该接口定义了两个方法：`ClassMatcher enhanceClass()`和`MethodInterceptPoint[] getMethodInterceptPoints()`：  
-`ClassMatcher enhanceClass()`用来获取需要增强的目标类，支持单个和多个类，注解，也可以通过前缀匹配需要增强的类；  
-`MethodInterceptPoint[] getMethodInterceptPoints()`用来获取封装了待增强目标方法和其拦截器的MethodInterceptPoint(对应的拦截器接口说明在下面详细说明)，支持返回多个不同类型的拦截器。
-- [spi文件示例](javamesh-samples/javamesh-example/demo-plugin/src/main/resources/META-INF/services/com.huawei.apm.bootstrap.definition.EnhanceDefinition)  
-  文件名为接口类文件的全限定名；  
-  文件内容为实现了该接口的类的全限定名；    
-  文件位置按照spi的机制应放到模块`resources/META-INF/services`。
-- [实现示例](javamesh-samples/javamesh-example/demo-plugin/src/main/java/com/huawei/example/demo/definition/DemoAnnotationDefinition.java)
-```java
-public class DemoAnnotationDefinition implements EnhanceDefinition {
-    @Override
-    public ClassMatcher enhanceClass() {
-        return ClassMatchers.annotationWith("com.huawei.example.demo.DemoAnnotation");
-    }
-
-    @Override
-    public MethodInterceptPoint[] getMethodInterceptPoints() {
-        return new MethodInterceptPoint[]{
-                MethodInterceptPoint.newStaticMethodInterceptPoint(
-                        "com.huawei.example.demo.interceptor.DemoStaticInterceptor",
-                        ElementMatchers.<MethodDescription>named("staticFunc")
-                )
-          };
-    }
-}
+```shell
+# Run under Linux
+java -jar sermant-agent-x.x.x/server/sermant/sermant-backend-x.x.x.jar
 ```
-在示例代码中增强了`com.huawei.example.demo.DemoAnnotation`注解修饰的类，拦截器的类为`com.huawei.example.demo.interceptor.DemoStaticInterceptor`，实现了静态方法拦截接口(这部分在下面详细说明)，拦截的方法为`staticFunc`方法。
-### [拦截器接口](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/interceptors/Interceptor.java)
-该部分接口的实现不需要通过spi机制加载；  
-拦截器接口的实现类用在增强类接口的`getMethodInterceptPoints()`方法中；
-根据方法的不同扩展出了三种拦截器接口，分别是静态方法拦截器`StaticMethodInterceptor`，实例方法拦截器`InstanceMethodInterceptor`,构造方法拦截器`ConstructorInterceptor`。
-- [静态拦截器](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/interceptors/StaticMethodInterceptor.java)  
-  该拦截器接口中有三个方法：`before`, `after`, `onThrow`。  
-  `before`在拦截方法执行前前运行；`after`在拦截方法执行结束后运行；`onThrow`用于异常处理。
-```java
-public class DemoStaticInterceptor implements StaticMethodInterceptor {
-    @Override
-    public void before(Class<?> clazz, Method method, Object[] arguments, BeforeResult beforeResult) throws Exception {
-        System.out.println(clazz.getSimpleName() + ": [DemoStaticInterceptor]-before");
-    }
 
-    @Override
-    public Object after(Class<?> clazz, Method method, Object[] arguments, Object result) throws Exception {
-        System.out.println(clazz.getSimpleName() + ": [DemoStaticInterceptor]-after");
-        return result;
-    }
-
-    @Override
-    public void onThrow(Class<?> clazz, Method method, Object[] arguments, Throwable t) {
-        System.out.println(clazz.getSimpleName() + ": [DemoStaticInterceptor]-onThrow");
-    }
-}
+```shell
+# Run under Windows
+java -jar sermant-agent-x.x.x\server\sermant\sermant-backend-x.x.x.jar
 ```
-- [示例拦截器](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/interceptors/InstanceMethodInterceptor.java)  
-  该拦截器接口中有三个方法：`before`, `after`, `onThrow`。  
-  `before`在拦截方法执行前前运行；`after`在拦截方法执行结束后运行；`onThrow`为异常处理。
-- [构造拦截器](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/interceptors/ConstructorInterceptor.java)
-- 该拦截器接口中有一个方法：`onConstruct`。
-### [插件配置接口](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/config/BaseConfig.java)
-插件配置接口实现类中写入插件运行过程中需要的配置信息。
-- [spi文件示例](javamesh-samples/javamesh-example/demo-plugin/src/main/resources/META-INF/services/com.huawei.apm.bootstrap.config.BaseConfig)  
-  文件名为接口类文件的全限定名；  
-  文件内容为实现了该接口的类的全限定名；    
-  文件位置按照spi的机制应放到模块`resources/META-INF/services`。
-```java
-@ConfigTypeKey("demo.test")
-public class DemoConfig implements BaseConfig {
-    @ConfigFieldKey("str2DoubleMap") 
-    private Map<String, Double> map = Collections.emptyMap();
-}
-```
-### [插件初始化接口](javamesh-agentcore/javamesh-agentcore-core/src/main/java/com/huawei/apm/core/boot/PluginService.java)
-- [spi文件示例](javamesh-samples/javamesh-example/demo-plugin/src/main/resources/META-INF/services/com.huawei.apm.bootstrap.boot.PluginService)  
-  文件名为接口类文件的全限定名；  
-  文件内容为实现了该接口的类的全限定名；    
-  文件位置按照spi的机制应放到模块`resources/META-INF/services`。  
 
-插件初始化接口用户初始化插件，比如插件的心跳等定时任务的启动。  
-该接口有两个方法：`init()`用于启动插件初始化，`stop()`用于停止插件。
-下面给出插件通过扩展框架线条功能的初始化示例：
-```java
-public class DemoService implements PluginService {
-    @Override
-    public void init() {
-        System.out.println("[DemoService]-init");
-    }
+Start **Sermant** demo project: 
 
-    @Override
-    public void stop() {
-        System.out.println("[DemoService]-stop");
-    }
-}
+```shell
+# Run under Linux
+java -cp sermant-example/demo-application/target/demo-application.jar \
+  -javaagent:sermant-agent-x.x.x/agent/sermant-agent.jar=appName=test \
+  com.huawei.example.demo.DemoApplication
 ```
+
+```shell
+# Run under Windows
+java -cp sermant-example\demo-application\target\demo-application.jar ^
+  -javaagent:sermant-agent-x.x.x\agent\sermant-agent.jar=appName=test ^
+  com.huawei.example.demo.DemoApplication
+```
+Check running status of Sermant. In this example, open the browser and navigate to the URL "http://localhost:8900".
+
+![pic](docs/binary-docs/backend_sermant_info.png)
+
+#### Please refer to the  [Service Register & Discovery Plugin QuickStart](docs/QuickStart.md) for details.
+
+## More documents to follow
+
+Please refer to the  [Development Guide](docs/README.md)
+
+## License
+
+Sermant adopts [Apache 2.0 License.](/LICENSE)
+
+## How to contribute
+
+Please read  [Contribute Guide](CONTRIBUTING.md) to refer how to jion the contribution.
+
+## Declaration
+
+- [Apache/Servicecomb-java-chassis](https://github.com/apache/servicecomb-java-chassis): Sermant refer the service governance algorithm from Apache Servicecomb project.
+- [Apache/Servicecomb-kie](https://github.com/apache/servicecomb-kie): Sermant uses servicecomb-kie as the default dynamic configuration center.
+- [Apache/SkyWalking](https://skywalking.apache.org/): The plugin architecture in this project is refered to Apache Skywalking. Part of the framework code in Sermant is built based on Apache Skywalking project as well.
+- [Alibaba/Sentinel](https://github.com/alibaba/Sentinel): Sermant's flow-control plugin is built based on Alibaba Sentinel project. 
+

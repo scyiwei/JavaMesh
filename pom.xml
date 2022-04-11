@@ -1,77 +1,89 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.huawei.javamesh</groupId>
-    <artifactId>javamesh</artifactId>
+    <groupId>com.huawei.sermant</groupId>
+    <artifactId>sermant</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
     <properties>
         <encoding>UTF-8</encoding>
         <jdk.version>1.6</jdk.version>
 
-        <slf4j.version>1.7.30</slf4j.version>
+        <commons-lang.version>2.6</commons-lang.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <commons-collections.version>4.4</commons-collections.version>
-        <guice.version>4.1.0</guice.version>
+        <guice.version>4.2.3</guice.version>
         <http.client.version>4.5.13</http.client.version>
         <http.core.version>4.4.13</http.core.version>
         <Java-WebSocket.version>1.5.1</Java-WebSocket.version>
-        <netty.version>4.1.63.Final</netty.version>
-        <protobuf.version>3.13.0</protobuf.version>
+        <netty.version>4.1.73.Final</netty.version>
+        <protobuf.version>3.17.3</protobuf.version>
         <fastjson.version>1.2.76</fastjson.version>
         <xml.apis.version>1.4.01</xml.apis.version>
+        <xerces.version>2.12.1</xerces.version>
         <snake.yaml.version>1.26</snake.yaml.version>
-        <asm.version>8.0.1</asm.version>
         <byte.buddy.version>1.10.14</byte.buddy.version>
+        <zookeeper.version>3.6.0</zookeeper.version>
+        <lombok.version>1.18.10</lombok.version>
+        <asm.version>8.0.1</asm.version>
+        <common.io.version>1.3.2</common.io.version>
 
-        <grpc.version>1.36.1</grpc.version>
-        <guava-jdk6.version>19.0</guava-jdk6.version>
-        <guava-jdk8.version>29.0-jre</guava-jdk8.version>
-        <guava.version>${guava-jdk6.version}</guava.version>
+        <slf4j.version>1.7.35</slf4j.version>
+        <log4j2.version>2.17.1</log4j2.version>
+        <logback.version>1.2.9</logback.version>
 
         <junit.version>4.12</junit.version>
+        <junit.jupiter.version>5.8.1</junit.jupiter.version>
         <mockito-core.version>3.9.0</mockito-core.version>
+        <mockito-inline.version>3.9.0</mockito-inline.version>
 
+        <clean.plugin.version>2.5</clean.plugin.version>
+        <compiler.plugin.version>3.8.1</compiler.plugin.version>
+        <source.plugin.version>3.0.1</source.plugin.version>
+        <jar.plugin.version>3.2.0</jar.plugin.version>
+        <resources.plugin.version>3.1.0</resources.plugin.version>
+        <shade.plugin.version>3.2.4</shade.plugin.version>
+        <assembly.plugin.version>2.5.3</assembly.plugin.version>
+        <grpc.version>1.36.1</grpc.version>
         <os.plugin.version>1.5.0.Final</os.plugin.version>
         <protubuf.plugin.version>0.5.1</protubuf.plugin.version>
+        <version.plugin.version>2.8.1</version.plugin.version>
+        <license.plugin.version>1.19</license.plugin.version>
 
-        <javamesh.name>javamesh-agent</javamesh.name>
-        <javamesh.version>2.0.5</javamesh.version>
-        <javamesh.basedir>${pom.basedir}/..</javamesh.basedir>
+        <sermant.name>sermant-agent</sermant.name>
+        <sermant.basedir>${pom.basedir}/..</sermant.basedir>
 
-        <package.temp.dir>${javamesh.basedir}/${javamesh.name}-${javamesh.version}</package.temp.dir>
+        <package.temp.dir>${sermant.basedir}/${sermant.name}-${project.version}</package.temp.dir>
         <package.agent.dir>${package.temp.dir}/agent</package.agent.dir>
         <package.server.dir>${package.temp.dir}/server</package.server.dir>
-        <package.webapp.dir>${package.temp.dir}/webapp</package.webapp.dir>
         <package.output.dir>${project.build.outputDirectory}</package.output.dir>
+        <package.license.ftl.file>third-party-license.ftl</package.license.ftl.file>
+        <package.resources.dir>sermant-package/resources</package.resources.dir>
 
-        <dependency.output.dir>${package.agent.dir}/lib</dependency.output.dir>
-
-        <shade.common.prefix>com.huawei</shade.common.prefix>
+        <shade.common.prefix>com.huawei.sermant.dependencies</shade.common.prefix>
         <shade.distinct.prefix>${project.artifactId}</shade.distinct.prefix>
+
+        <license.binary.suffix.file>LICENSE-binary-suffix.txt</license.binary.suffix.file>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.huawei.javamesh</groupId>
-                <artifactId>javamesh-agentcore-premain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.huawei.javamesh</groupId>
-                <artifactId>javamesh-agentcore-core</artifactId>
+                <groupId>com.huawei.sermant</groupId>
+                <artifactId>sermant-agentcore-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -119,6 +131,16 @@
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-epoll</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf.version}</version>
@@ -134,9 +156,29 @@
                 <version>${xml.apis.version}</version>
             </dependency>
             <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${xerces.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
                 <version>${snake.yaml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${byte.buddy.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.zookeeper</groupId>
+                <artifactId>zookeeper</artifactId>
+                <version>${zookeeper.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>
@@ -149,9 +191,45 @@
                 <version>${asm.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>${byte.buddy.version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${common.io.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>log4j-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
 
             <dependency>
@@ -161,78 +239,133 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.jupiter.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito-core.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-inline</artifactId>
+                <version>${mockito-inline.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
     <profiles>
         <profile>
-            <id>prepare</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>javamesh-prepare</module>
-            </modules>
-        </profile>
-        <profile>
             <id>agent</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>javamesh-agentcore</module>
-                <module>javamesh-samples</module>
+                <module>sermant-agentcore</module>
+                <module>sermant-plugins</module>
             </modules>
         </profile>
         <profile>
             <id>example</id>
             <modules>
-                <module>javamesh-agentcore</module>
-                <module>javamesh-samples</module>
+                <module>sermant-agentcore</module>
+                <module>sermant-plugins</module>
+                <module>sermant-backend</module>
+                <module>sermant-example</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>backend</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>sermant-backend</module>
             </modules>
         </profile>
         <profile>
             <id>ext</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <modules>
-                <module>javamesh-samples</module>
-                <module>javamesh-backend</module>
+                <module>sermant-plugins</module>
             </modules>
         </profile>
         <profile>
             <id>package</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <modules>
-                <module>javamesh-package</module>
+                <module>sermant-package</module>
             </modules>
         </profile>
         <profile>
             <id>all</id>
             <modules>
-                <module>javamesh-prepare</module>
-                <module>javamesh-agentcore</module>
-                <module>javamesh-samples</module>
-                <module>javamesh-backend</module>
-                <module>javamesh-package</module>
+                <module>sermant-example</module>
+                <module>sermant-agentcore</module>
+                <module>sermant-plugins</module>
+                <module>sermant-backend</module>
+                <module>sermant-package</module>
             </modules>
         </profile>
     </profiles>
     <build>
-        <finalName>${project.artifactId}-${javamesh.version}</finalName>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <directory>${sermant.basedir}/${package.resources.dir}</directory>
+                <includes>
+                    <include>META-INF/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${os.plugin.version}</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${clean.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${compiler.plugin.version}</version>
+                    <configuration>
+                        <source>${jdk.version}</source>
+                        <target>${jdk.version}</target>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${source.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${jar.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${resources.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.4</version>
+                    <version>${shade.plugin.version}</version>
                     <executions>
                         <execution>
                             <phase>package</phase>
@@ -242,13 +375,105 @@
                         </execution>
                     </executions>
                     <configuration>
-                        <outputFile>${package.output.dir}/${project.artifactId}-${javamesh.version}.jar</outputFile>
+                        <outputFile>${package.output.dir}/${project.artifactId}-${project.version}.jar</outputFile>
                         <relocations>
                             <relocation>
                                 <pattern>net.bytebuddy</pattern>
                                 <shadedPattern>${shade.common.prefix}.net.bytebuddy</shadedPattern>
                             </relocation>
+                            <relocation>
+                                <pattern>org.slf4j</pattern>
+                                <shadedPattern>${shade.common.prefix}.org.slf4j</shadedPattern>
+                            </relocation>
                         </relocations>
+                        <transformers>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer"/>
+                        </transformers>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${assembly.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <artifactId>protobuf-maven-plugin</artifactId>
+                    <version>${protubuf.plugin.version}</version>
+                    <configuration>
+                        <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
+                        </protocArtifact>
+                        <pluginId>grpc-java</pluginId>
+                        <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
+                        </pluginArtifact>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>compile</goal>
+                                <goal>compile-custom</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- execute 'mvn versions:set -DnewVersion=${version}' to set new version to all modules. -->
+                <!-- execute 'mvn versions:revert' to roll back. -->
+                <!-- execute 'mvn versions:commit' to remove back up file. -->
+                <!-- use '-pl' option to change the 'version' label for submodule, the 'version' label is essential. -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${version.plugin.version}</version>
+                </plugin>
+                <!-- execute 'mvn license:aggregate-add-third-party' to collect third party license. -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>${license.plugin.version}</version>
+                    <configuration>
+                        <!-- set output directory -->
+                        <outputDirectory>${pom.basedir}/${package.resources.dir}</outputDirectory>
+                        <!-- set output file name -->
+                        <thirdPartyFilename>${license.binary.suffix.file}</thirdPartyFilename>
+                        <!-- exclude this project -->
+                        <excludedGroups>${project.groupId}</excludedGroups>
+                        <!-- exclude provided scope -->
+                        <excludedScopes>provided</excludedScopes>
+                        <!-- use this template to group result by license type -->
+                        <fileTemplate>${pom.basedir}/${package.resources.dir}/${package.license.ftl.file}</fileTemplate>
+                        <!-- merge non canonical aliases -->
+                        <!-- todo 需要进一步合并license -->
+                        <licenseMerges>
+                            <licenseMerge>
+                                Apache License, Version 2.0
+                                |The Apache License, Version 2.0
+                                |The Apache Software License, Version 2.0
+                                |Apache Public License 2.0
+                                |Apache 2
+                                |Apache 2.0
+                                |Apache-2.0
+                                |Apache License 2.0
+                                |Apache License, version 2.0
+                                |Apache License Version 2.0
+                                |Apache v2
+                                |Apache Software Licenses
+                            </licenseMerge>
+                            <licenseMerge>
+                                3-Clause BSD License
+                                |BSD 3-clause
+                                |BSD 3-Clause
+                            </licenseMerge>
+                            <licenseMerge>
+                                Eclipse Public License v1.0
+                                |Eclipse Public License 1.0
+                                |Eclipse Public License - v 1.0
+                            </licenseMerge>
+                            <licenseMerge>
+                                The MIT License
+                                |MIT License
+                            </licenseMerge>
+                        </licenseMerges>
                     </configuration>
                 </plugin>
             </plugins>
@@ -256,23 +481,7 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>${jdk.version}</source>
-                    <target>${jdk.version}</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
                 <configuration>
                     <attach>true</attach>
                 </configuration>

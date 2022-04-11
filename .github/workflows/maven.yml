@@ -1,16 +1,34 @@
-name: Java CI with Maven
+name: CI
 
 on:
   push:
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
+
+  checkstyle:
+    name: Checkstyle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+      - name: download checkstyle
+        run: curl -o checkstyle.jar -L https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.41.1/checkstyle-8.41.1-all.jar
+      - name: checkstyle
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          java -jar checkstyle.jar -c checkstyle.xml -f xml . | reviewdog -f=checkstyle -name="Checkstyle Check" -reporter=github-pr-check -level=error
+
+
   build:
-
     runs-on: windows-latest
-
+    name: build
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 8
@@ -19,13 +37,16 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
           cache: maven
+      - name: Create License Binary Suffix
+        run: |
+          mvn license:aggregate-add-third-party
       - name: Build with Maven
         run: |
           mvn -B package -DskipTests --file pom.xml
           mkdir ${{ github.workspace }}/package
-          cp ${{ github.workspace }}/javamesh-agent-2.0.5.tar ${{ github.workspace }}/package
+          cp ${{ github.workspace }}/sermant-agent-*.tar ${{ github.workspace }}/package
       - name: upload package
         uses: actions/upload-artifact@v1
         with:
-          name: java-mesh
+          name: sermant
           path: ${{ github.workspace }}/package
